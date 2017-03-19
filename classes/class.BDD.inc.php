@@ -22,7 +22,7 @@
         $this->connection = $conn;
       }
 
-      catch(PDOException $e) {
+      catch (PDOException $e) {
         $this->connection = 'La connexion à échouée : ' . $e->getMessage();
       }
     }
@@ -70,22 +70,38 @@
       // Tableau 3: Charactères spéciaux
       $char = [
         ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'],
+
         ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
-        ['#', '@', ')', '(', '[', ']', '-', '_', '/', '~', '&', '$', '£', '*', '%']
+
+        ['#', '@', '&', '$', '£', '%', '!']
       ];
 
+      // Stock le nombre d'éléments dans chaque tableau
       $alphaCount = count($char[0]);
       $numCount = count($char[1]);
       $speCount = count($char[2]);
 
       $password = "";
 
+      // S'assure qu'il y ai au moins :
+      // * une majuscule
+      // * un nombre
+      // * une charactère spécial
       $password .= strtoupper($char[0][rand(0, $alphaCount - 1)]);
       $password .= $char[1][rand(0, $numCount - 1)];
       $password .= $char[2][rand(0, $speCount - 1)];
 
+      // Boucle pour former le mot de passe
       for ($i = 0; $i < 7; ++$i) {
-        $randList = rand(0, 2);
+        $randList = rand(0, 10);
+
+        if ($randList <= 5)
+          $randList = 0;
+        else if ($randList > 5 && $randList <= 8)
+          $randList = 1;
+        else
+          $randList = 2;
+
         $randNumb = rand(0, count($char[$randList]) - 1);
 
         $password .= $char[$randList][$randNumb];
