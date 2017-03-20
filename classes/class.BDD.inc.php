@@ -7,12 +7,12 @@
       $servername = 'localhost';
       $username = 'root';
       $password = '@lexandrE6';
-      $dbname = 'gsbpartenaires';
+      $dbname = 'partenaire';
 
       try {
         $conn = new PDO(
-          'mysql:host=$servername;
-           dbname=$dbname',
+          "mysql:host=$servername;
+           dbname=$dbname",
            $username,
            $password
         );
@@ -27,6 +27,23 @@
       }
     }
 
+    public function checkUser($login, $password) {
+      $stmt = $this->connection
+                   ->prepare("SELECT *
+                              FROM `partenaire`
+                              WHERE motDePasse = :password
+                              AND login = :login");
+
+      $stmt->bindParam(":password", $password, PDO::PARAM_STR);
+      $stmt->bindParam(":login", $login, PDO::PARAM_STR);
+
+      $stmt->execute();
+
+      $userLogged = $stmt->rowCount() > 0 ? True : False;
+
+      return $userLogged;
+    }
+
     // Fonction permettant de générer un nouvel utilisateur
     // @TODO: Vérifier que le client n'existe pas déjà
     public function generateNewClient($nom) {
@@ -37,11 +54,16 @@
                    ->prepare("INSERT INTO partenaire(login, password, nom)
                               VALUES (:login, :password, :nom)");
 
-      $stmt->bindParam(':login', $login, PDO::PARAM_INT);
+      $stmt->bindParam(':login', $login, PDO::PARAM_STR);
       $stmt->bindParam(':password', $password, PDO::PARAM_STR);
       $stmt->bindParam(':nom', $nom, PDO::PARAM_STR);
 
       $stmt->execute();
+
+      echo '<div class="info">';
+      echo "<h1> $login </h1>";
+      echo "<h1> $password </h1>";
+      echo '<div>';
     }
 
     // Fonction qui permet de générer un login unique
