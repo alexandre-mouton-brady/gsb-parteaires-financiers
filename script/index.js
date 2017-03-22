@@ -1,18 +1,21 @@
 var deconnexion = document.querySelector('.deconnexion');
 
 function handleClick(e) {
-  console.log(e);
 
-  var xmlhttp = new XMLHttpRequest();
+  var xhr = new XMLHttpRequest(),
+      method = "POST",
+      url = "ajax.php";
 
-  xmlhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      document.getElementById("txtHint").innerHTML = this.responseText;
+  xhr.open(method, url, true);
+  xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+      if (xhr.responseText === '1') {
+        window.location.reload(true);
+      };
     }
-    xmlhttp.open('POST', 'index.php', true);
-    xmlhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    xmlhttp.send("deconnexion=true");
-  }
+  };
+  xhr.send('deco=1');
 }
 
 deconnexion.addEventListener('click', handleClick);

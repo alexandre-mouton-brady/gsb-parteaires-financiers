@@ -16,59 +16,21 @@
     $_SESSION['estConnecte'] = False;
   }
 
-  if (isset($_REQUEST['deco'])) {
-    echo 'DECO';
-  }
-
   if (isset($_POST['connexion'])) {
     $login = $_POST['login'];
     $password= $_POST['motDePasse'];
 
     if ($bdd->checkUser($login, $password)) {
       $_SESSION['estConnecte'] = True;
-      echo 'vous êtes connecté';
+      header("Refresh:0");
+      exit;
     } else {
       echo 'erreur de connexion';
     }
   }
 ?>
-<script>
 
-var deconnexion = document.querySelector('.deconnexion');
 
-function handleClick(e) {
-
-  var xhr = new XMLHttpRequest(),
-      method = "GET",
-      url = "index.php?deco=1";
-
-  xhr.open(method, url, true);
-  xhr.onreadystatechange = function () {
-    if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-      console.log(xhr.responseText);
-    }
-  };
-  xhr.send();
-
-  // var xmlhttp = new XMLHttpRequest();
-
-  // xmlhttp.onreadystatechange = function() {
-
-  //   console.log('hello');
-
-  //   if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-  //     document.getElementById("txtHint").innerHTML = xmlhttp.responseText;
-  //   }
-  //   xmlhttp.open('POST', 'ajax.php', true);
-  //   xmlhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-  //   xmlhttp.send("deco=true");
-  //   document.getElementById("txtHint").innerHTML = 'processing...';
-  // }
-}
-
-deconnexion.addEventListener('click', handleClick);
-
-</script>
     <main class="content-wrapper">
       <div id="txtHint"></div>
       <?php
@@ -78,6 +40,11 @@ deconnexion.addEventListener('click', handleClick);
     </main>
 
 
+
+<?php
+if ($_SESSION['estConnecte'])
+  echo '<script src="./script/index.js"></script>';
+?>
 
 <?php
   Template::footer();
