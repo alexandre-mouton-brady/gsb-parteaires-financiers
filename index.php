@@ -39,6 +39,8 @@
       ?>
     </main>
 
+    <h1><?php echo $bdd->generateNewClient('microsoft'); ?></h1>
+
 
 
 <?php

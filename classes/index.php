@@ -1,4 +1,4 @@
 <?php
-  include_once('classes/class.BDD.inc.php');
-  include_once('classes/class.Template.inc.php');
+  require('class.BDD.inc.php');
+  require('class.Template.inc.php');
 ?>

@@ -50,6 +50,7 @@
       $password = $this->generatePassword();
       $login = $this->generateLogin($nom);
 
+    /*
       $stmt = $this->connection
                    ->prepare("INSERT INTO partenaire(login, password, nom)
                               VALUES (:login, :password, :nom)");
@@ -59,11 +60,11 @@
       $stmt->bindParam(':nom', $nom, PDO::PARAM_STR);
 
       $stmt->execute();
+    */
 
-      echo '<div class="info">';
-      echo "<h1> $login </h1>";
-      echo "<h1> $password </h1>";
-      echo '<div>';
+      $data = array('login' => $login, 'password' => $password);
+
+      return json_encode($data);
     }
 
     // Fonction qui permet de générer un login unique

@@ -2,6 +2,11 @@
 
   class Template {
 
+    public static function getUrl() {
+      $url = 'http://127.0.0.1/gsb-partenaires/';
+      return $url;
+    }
+
     public static function head($title) {
       echo '<!DOCTYPE html>';
       echo '<html lang="fr">';
@@ -11,7 +16,7 @@
       echo '<meta name="description" content="Le meilleur moyen de s\'impliquer dans une bonne cause. Simple et facile, participer au financement des projets GSB aujourd\'hui?.">';
       echo '<meta name="viewport" content="width=device-width, initial-scale=1.0">';
       echo '<title>' . $title . '</title>';
-      echo '<link href="styles/main.css" rel="stylesheet">';
+      echo '<link href="' . Template::getUrl() . 'styles/main.css" rel="stylesheet">';
       echo '</head>';
       echo '<body>';
     }
@@ -48,11 +53,35 @@
       echo '<div class="input__focus"></div>';
       echo '</div>';
       echo '<div class="group">';
-      echo '<a href="<?php echo $url; ?>inscription" class="btn">';
+      echo '<a href="' . Template::getUrl() . 'inscription" class="btn">';
       echo '<span class="btn__text">Inscription</span>';
       echo '</a>';
       echo '<button type="submit" name="connexion" class="btn btn--raised">';
       echo '<span class="btn__text">Connexion</span>';
+      echo '</button>';
+      echo '</div>';
+      echo '</form>';
+    }
+
+    public static function inscriptionForm() {
+      echo '<form action="" autocomplete="nope" method="post" class="form form__inscription">';
+      echo '<h1 class="form__title">Inscription partenaire</h1>';
+      echo '<div class="input">';
+      echo '<input type="text" class="input__field" name="name" id="name" required value="">';
+      echo '<label for="name" class="input__label">Nom de l\'entreprise</label>';
+      echo '<div class="input__focus"></div>';
+      echo '</div>';
+      echo '<div class="input">';
+      echo '<input type="text" class="input__field" name="value" id="value" required value="">';
+      echo '<label for="value" class="input__label">Montant du don</label>';
+      echo '<div class="input__focus"></div>';
+      echo '</div>';
+      echo '<div class="group">';
+      echo '<a href="' . Template::getUrl() . '" class="btn btn--danger">';
+      echo '<span class="btn__text">Retour</span>';
+      echo '</a>';
+      echo '<button type="submit" name="inscription" class="btn btn--raised">';
+      echo '<span class="btn__text">Inscription</span>';
       echo '</button>';
       echo '</div>';
       echo '</form>';

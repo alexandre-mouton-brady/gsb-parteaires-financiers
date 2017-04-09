@@ -1,6 +1,9 @@
 <?php
   session_start();
-  include_once('/classes/index.php');
+  require('../classes/index.php');
   Template::head('login page');
-  $url = $_SERVER['REQUEST_URI'];
+  Template::Header('Inscription');
+  Template::inscriptionForm();
 ?>
+
+  <script src="./inscription.js"></script>
