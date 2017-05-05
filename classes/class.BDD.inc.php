@@ -44,6 +44,12 @@
       return $userLogged;
     }
 
+    // Fonction permettant de distribuer l'argent
+    public function makeDonation($money) {
+      $stmt = $this->connection
+                   ->prepare("INSERT INTO");
+    }
+
     // Fonction permettant de générer un nouvel utilisateur
     // @TODO: Vérifier que le client n'existe pas déjà
     public function generateNewClient($nom) {
