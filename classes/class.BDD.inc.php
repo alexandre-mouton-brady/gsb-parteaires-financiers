@@ -2,19 +2,25 @@
 
   class BDD {
     private $connection;
+    private $servername;
+    private $username;
+    private $password;
+    private $dbname;
 
     function __construct() {
-      $servername = 'localhost';
-      $username = 'root';
-      $password = '@lexandrE6';
-      $dbname = 'partenaire';
+      $this->servername = 'localhost';
+      $this->username   = 'root';
+      $this->password   = '@lexandrE6';
+      $this->dbname     = 'partenaire';
+    }
 
+    private function on() {
       try {
         $conn = new PDO(
-          "mysql:host=$servername;
-           dbname=$dbname",
-           $username,
-           $password
+          "mysql:host=$this->servername;
+           dbname=$this->dbname",
+           $this->username,
+           $this->password
         );
 
         $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -23,54 +29,127 @@
       }
 
       catch (PDOException $e) {
-        $this->connection = 'La connexion à échouée : ' . $e->getMessage();
+        throw Error('La connexion à échouée : ' . $e->getMessage());
       }
     }
 
+    private function off() {
+      $this->connection = null;
+    }
+
     public function checkUser($login, $password) {
+      $this->on();
+
       $stmt = $this->connection
                    ->prepare("SELECT *
                               FROM `partenaire`
                               WHERE motDePasse = :password
                               AND login = :login");
 
-      $stmt->bindParam(":password", $password, PDO::PARAM_STR);
       $stmt->bindParam(":login", $login, PDO::PARAM_STR);
+      $stmt->bindParam(":password", $password, PDO::PARAM_STR);
 
       $stmt->execute();
 
       $userLogged = $stmt->rowCount() > 0 ? True : False;
 
-      return $userLogged;
-    }
+      $this->off();
 
-    // Fonction permettant de distribuer l'argent
-    public function makeDonation($money) {
-      $stmt = $this->connection
-                   ->prepare("INSERT INTO");
+      return $userLogged;
     }
 
     // Fonction permettant de générer un nouvel utilisateur
     // @TODO: Vérifier que le client n'existe pas déjà
-    public function generateNewClient($nom) {
+    public function generateNewClient($nom, $donation) {
       $password = $this->generatePassword();
       $login = $this->generateLogin($nom);
+      $montant = $donation;
+      $projects = $this->retrieveProjects();
 
-    /*
-      $stmt = $this->connection
-                   ->prepare("INSERT INTO partenaire(login, password, nom)
-                              VALUES (:login, :password, :nom)");
+      $this->on();
 
-      $stmt->bindParam(':login', $login, PDO::PARAM_STR);
-      $stmt->bindParam(':password', $password, PDO::PARAM_STR);
-      $stmt->bindParam(':nom', $nom, PDO::PARAM_STR);
+      /*---------------------------*/
+
+      $req = "INSERT INTO partenaire (nom, login, motDePasse) VALUES (:nom, :login, :motDePasse)";
+
+      $stmt = $this->connection->prepare($req);
+
+      $stmt->bindParam(":nom", $nom, PDO::PARAM_STR);
+      $stmt->bindParam(":login", $login, PDO::PARAM_STR);
+      $stmt->bindParam(":motDePasse", $password, PDO::PARAM_STR);
 
       $stmt->execute();
-    */
 
-      $data = array('login' => $login, 'password' => $password);
+      /*---------------------------*/
 
-      return json_encode($data);
+      $lastId = $this->connection->lastInsertId();
+
+      $req = "INSERT INTO donation (montant, idPartenaire) VALUES (:donation, :idPartenaire)";
+
+      $stmt = $this->connection->prepare($req);
+      $stmt->bindParam(":donation", $donation, PDO::PARAM_INT);
+      $stmt->bindParam(":idPartenaire", $lastId, PDO::PARAM_INT);
+
+      $stmt->execute();
+
+      /*---------------------------*/
+
+      $lastId = $this->connection->lastInsertId();
+
+      foreach ($projects as $project) {
+        if ($montant <= 0)
+          break;
+        if ($project['montantActuel'] === 0)
+          continue;
+
+        if ($project['montantActuel'] - $montant >= 0) {
+          $req = "INSERT INTO affectation (idDonation, idProjet) VALUES (:idDonation, :idProjet)";
+          $stmt = $this->connection->prepare($req);
+
+          $stmt->bindParam(":idDonation", $lastId, PDO::PARAM_INT);
+          $stmt->bindParam(":idProjet", $project['id'], PDO::PARAM_INT);
+
+          $stmt->execute();
+
+          /* --- */
+
+          $montant = $montant - $project['montantActuel'];
+          $nouveauMontant = $montant * -1;
+
+          $req = "UPDATE projet SET montantActuel = :nouveauMontant WHERE idProjet = :idProjet";
+          $stmt = $this->connection->prepare($req);
+
+          $stmt->bindParam(":nouveauMontant", $nouveauMontant, PDO::PARAM_INT);
+          $stmt->bindParam(":idProjet", $project['id'], PDO::PARAM_INT);
+
+          $stmt->execute();
+        }
+      }
+
+      $this-off();
+    }
+
+    public function retrieveProjects() {
+      $this->on();
+
+        $req = "SELECT * FROM projet ORDER BY importance DESC";
+        $arr = array();
+
+        foreach ($this->connection->query($req) as $row) {
+          $tempArr = array(
+            "id" => $row['idProjet'],
+            "nom" => $row['nomProjet'],
+            "description" => $row['descriptionProjet'],
+            "montantAPayer" => $row['montantAPayer'],
+            "montantActuel" => $row['montantActuel'],
+            "importance" => $row['importance']
+          );
+          array_push($arr, $tempArr);
+        }
+
+      $this->off();
+
+      return $arr;
     }
 
     // Fonction qui permet de générer un login unique

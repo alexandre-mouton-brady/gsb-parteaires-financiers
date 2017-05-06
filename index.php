@@ -1,53 +1,22 @@
 <?php
   session_start();
-  include_once('./classes/index.php');
-  Template::head('login page');
 
-  if (!isset($_SESSION['estConnecte']))
-    $_SESSION['estConnecte'] = False;
+  $currUrl = $_SERVER["REQUEST_SCHEME"] . '://' . $_SERVER["SERVER_NAME"] . $_SERVER["REQUEST_URI"];
+  $_SESSION['home'] = parse_url($currUrl, PHP_URL_SCHEME) . '://' . parse_url($currUrl, PHP_URL_HOST) . parse_url($currUrl, PHP_URL_PATH);
 
-  Template::header('Connexion');
-
-  $url = $_SERVER['REQUEST_URI'];
-
-  $bdd = new BDD;
-
-  if (!isset($_SESSION['estConnecte'])) {
-    $_SESSION['estConnecte'] = False;
+  if (isset($_GET['logout'])) {
+    $_SESSION['log'] = false;
+    header('Location: ' . $_SESSION['home'] . 'connexion');
   }
 
-  if (isset($_POST['connexion'])) {
-    $login = $_POST['login'];
-    $password= $_POST['motDePasse'];
+  if (!isset($_SESSION['log']) || !$_SESSION['log']) {
+    header('Location: ' . $_SESSION['home'] . 'connexion');
+  } else {
+    echo '<a href="' . $_SESSION['home'] . '?logout=true">Logout</a>';
 
-    if ($bdd->checkUser($login, $password)) {
-      $_SESSION['estConnecte'] = True;
-      header("Refresh:0");
-      exit;
-    } else {
-      echo 'erreur de connexion';
+    if (isset($_SESSION['message'])) {
+      echo $_SESSION['message'];
+      unset($_SESSION['message']);
     }
   }
-?>
-
-
-    <main class="content-wrapper">
-      <div id="txtHint"></div>
-      <?php
-        if (!$_SESSION['estConnecte'])
-          Template::loginForm();
-      ?>
-    </main>
-
-    <h1><?php echo $bdd->generateNewClient('microsoft'); ?></h1>
-
-
-
-<?php
-if ($_SESSION['estConnecte'])
-  echo '<script src="./script/index.js"></script>';
-?>
-
-<?php
-  Template::footer();
 ?>

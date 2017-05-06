@@ -1,0 +1,211 @@
+* { box-sizing: border-box }
+
+:root {
+  --white: #f6f6f6;
+  --indiego: #4B4BF9;
+  --red: #E74C3C;
+}
+
+body {
+  margin: 0;
+  font-family: 'Muli', sans-serif;
+  overflow-x: hidden;
+}
+
+h1 {
+  font-size: 60px;
+  line-height: 72px;
+  letter-spacing: 2px;
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  text-decoration: none;
+  color: var(--indiego);
+}
+a:hover {
+  text-decoration: underline;
+}
+
+input {
+  border-width: 0;
+  font-family: inherit;
+  outline-width: 0;
+}
+
+/* Login form */
+.form {
+  background-color: var(--white);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 100px auto 0;
+  width: 100%;
+  max-width: 450px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.26);
+}
+
+.form__header {
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  background-color: var(--indiego);
+  padding: 20px;
+}
+
+.form__title {
+  color: var(--white);
+}
+
+.form__logo {
+  width: 150px;
+  margin-top: 20px;
+  display: block;
+}
+
+.form__body {
+  padding: 20px 40px;
+}
+
+.form__body > form {
+  display: flex;
+  flex-flow: column nowrap;
+}
+
+.form__label {
+  position: absolute;
+  color: #95989A;
+  font-size: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 20px;
+  cursor: text;
+  opacity: 1;
+  transition: opacity 200ms ease-in-out;
+}
+
+.form__input {
+  height: 40px;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  margin: 10px 0;
+}
+
+.form__input > input {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 5px;
+  padding: 0 20px;
+  font-size: 22px;
+}
+
+.form__text {
+  border: solid 2px #CACACA;
+  background-color: #f2f2f2;
+  transition: border-color 300ms ease-in-out;
+}
+
+.form__text:hover,
+.form__text:hover {
+  border-color: #979797;
+}
+.form__text:focus,
+.form__text:focus {
+  border-color: var(--indiego);
+}
+
+.form__text:valid,
+.form__text:valid {
+  border-color: #373737;
+}
+
+.form__text:focus + .form__label,
+.form__text:valid + .form__label {
+  opacity: 0;
+}
+
+.form__input--submit {
+  margin-top: 30px;
+}
+
+.form__input--submit > input {
+  background-color: var(--indiego);
+  color: var(--white);
+  cursor: pointer;
+  font-weight: 300;
+  transition: background-color 300ms ease-in-out;
+}
+
+.form__input--submit > input:hover {
+  background-color: #8080FA;
+}
+
+.form__footer {
+  padding: 0 40px 20px;
+}
+
+.form__footer > p {
+  margin: 5px 0;
+}
+
+/* Errors handeling */
+.msg {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  white-space: nowrap;
+  padding: 10px 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.26);
+  animation: drop 5s ease-in-out forwards;
+}
+
+.msg--error {
+  background-color: var(--red);
+  color: var(--white);
+}
+
+/*Animations*/
+.anim__form--enter {
+  animation: fadeIn 500ms ease-in-out;
+}
+.anim__form--leave {
+  animation: fadeOut 500ms ease-in-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes drop {
+  0% {
+    opacity: 0;
+    transform: translate3d(-50%, calc(-100% - 10px), 0);
+  }
+  10%, 90% {
+    opacity: 1;
+    transform: translate3d(-50%, 0, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(calc(-50vh - 50%), 0, 0);
+  }
+}
