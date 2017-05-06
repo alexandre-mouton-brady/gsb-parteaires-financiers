@@ -161,12 +161,24 @@ input {
   white-space: nowrap;
   padding: 10px 20px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.26);
-  animation: drop 5s ease-in-out forwards;
 }
 
 .msg--error {
   background-color: var(--red);
   color: var(--white);
+  animation: drop-d 5s ease-in-out forwards;
+}
+
+.msg--warning {
+  background-color: yellow;
+  color: #373737;
+  animation: drop-d 5s ease-in-out forwards;
+}
+
+.msg--success {
+  background-color: green;
+  color: var(--white);
+  animation: drop 5s ease-in-out forwards;
 }
 
 /*Animations*/
@@ -195,7 +207,7 @@ input {
   }
 }
 
-@keyframes drop {
+@keyframes drop-d {
   0% {
     opacity: 0;
     transform: translate3d(-50%, calc(-100% - 10px), 0);
@@ -207,5 +219,16 @@ input {
   100% {
     opacity: 0;
     transform: translate3d(calc(-50vh - 50%), 0, 0);
+  }
+}
+
+@keyframes drop {
+  0% {
+    opacity: 0;
+    transform: translate3d(-50%, calc(-100% - 10px), 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(-50%, 0, 0);
   }
 }

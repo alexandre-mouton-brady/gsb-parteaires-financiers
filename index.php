@@ -11,12 +11,17 @@
 
   if (!isset($_SESSION['log']) || !$_SESSION['log']) {
     header('Location: ' . $_SESSION['home'] . 'connexion');
+
   } else {
+    require ('./views/templates/header.php');
+
+    if (isset($_SESSION['warning'])) {
+      echo '<div class="msg msg--warning"> ' . $_SESSION['warning'] . '</div>';
+      unset($_SESSION['warning']);
+    }
+
     echo '<a href="' . $_SESSION['home'] . '?logout=true">Logout</a>';
 
-    if (isset($_SESSION['message'])) {
-      echo $_SESSION['message'];
-      unset($_SESSION['message']);
-    }
+    require ('./views/templates/footer.php');
   }
 ?>

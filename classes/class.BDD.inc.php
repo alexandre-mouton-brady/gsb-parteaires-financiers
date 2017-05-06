@@ -14,6 +14,11 @@
       $this->dbname     = 'partenaire';
     }
 
+    /**
+     * Ouvre la connexion à la base de données
+     *
+     * @return void
+     */
     private function on() {
       try {
         $conn = new PDO(
@@ -33,10 +38,25 @@
       }
     }
 
+    /**
+     * Ferme la connexion à la base de données
+     *
+     * @return void
+     */
     private function off() {
       $this->connection = null;
     }
 
+    /**
+     * Vérifie si l'utilisateur qui essai de se connecter exsite et
+     * si les identifiants entrés correspondent à ceux de la base de
+     * données
+     *
+     * @param [String] $login - Login de l'utilisateur
+     * @param [String] $password - Mot de passe de l'utilisateur
+     * @return [Boolean] $userLogged - Vrai si les logs correspondent,
+     *                                 faux sinon
+     *///
     public function checkUser($login, $password) {
       $this->on();
 
@@ -58,7 +78,15 @@
       return $userLogged;
     }
 
-    // Fonction permettant de générer un nouvel utilisateur
+    /**
+     * Genère un nouveau client lors de l'inscription en lui
+     * attribuant un login et un mot de passe. Elle initialize également
+     * la première donation.
+     *
+     * @param [String] $nom - Nom de l'organisation qui s'inscrit
+     * @param [Float] $donation - Montant de la première donation
+     * @return [Array] $data - Tableau contenant les identifiants générés
+     */
     // @TODO: Vérifier que le client n'existe pas déjà
     public function generateNewClient($nom, $donation) {
       $password = $this->generatePassword();
@@ -87,48 +115,82 @@
       $req = "INSERT INTO donation (montant, idPartenaire) VALUES (:donation, :idPartenaire)";
 
       $stmt = $this->connection->prepare($req);
-      $stmt->bindParam(":donation", $donation, PDO::PARAM_INT);
+      $stmt->bindParam(":donation", $donation, PDO::PARAM_STR);
       $stmt->bindParam(":idPartenaire", $lastId, PDO::PARAM_INT);
 
       $stmt->execute();
 
       /*---------------------------*/
 
-      $lastId = $this->connection->lastInsertId();
+      $idDonation = $this->connection->lastInsertId();
+
+      $reqAffectation = "INSERT INTO affectation (idDonation, idProjet, montant) VALUES (:idDonation, :idProjet, :montant)";
+      $affectation = $this->connection->prepare($reqAffectation);
+
+      $affectation->bindParam(":idDonation", $idDonation, PDO::PARAM_INT);
+      $affectation->bindParam(":idProjet", $idProjet, PDO::PARAM_INT);
+
+      /* --- */
+
+      $reqProjet = "UPDATE projet SET montantActuel = :nouveauMontant WHERE idProjet = :idProjet";
+      $projet = $this->connection->prepare($reqProjet);
+
+      $projet->bindParam(":nouveauMontant", $nouveauMontant, PDO::PARAM_INT);
+      $projet->bindParam(":idProjet", $idProjet, PDO::PARAM_INT);
+
+      /* --- */
 
       foreach ($projects as $project) {
+        $montantActuel = $project['montantActuel'];
+        $idProjet = $project['id'];
+
         if ($montant <= 0)
           break;
-        if ($project['montantActuel'] === 0)
+        if ($montantActuel == 0)
           continue;
 
-        if ($project['montantActuel'] - $montant >= 0) {
-          $req = "INSERT INTO affectation (idDonation, idProjet) VALUES (:idDonation, :idProjet)";
-          $stmt = $this->connection->prepare($req);
+        if ($montantActuel - $montant >= 0) {
 
-          $stmt->bindParam(":idDonation", $lastId, PDO::PARAM_INT);
-          $stmt->bindParam(":idProjet", $project['id'], PDO::PARAM_INT);
+          $affectation->bindParam(":montant", $montant, PDO::PARAM_INT);
 
-          $stmt->execute();
+          $affectation->execute();
 
           /* --- */
 
           $montant = $montant - $project['montantActuel'];
           $nouveauMontant = $montant * -1;
 
-          $req = "UPDATE projet SET montantActuel = :nouveauMontant WHERE idProjet = :idProjet";
-          $stmt = $this->connection->prepare($req);
+          $projet->execute();
 
-          $stmt->bindParam(":nouveauMontant", $nouveauMontant, PDO::PARAM_INT);
-          $stmt->bindParam(":idProjet", $project['id'], PDO::PARAM_INT);
+        } else if ($montantActuel - $montant < 0) {
+          $montant -= $montantActuel;
+          $nouveauMontant = 0;
 
-          $stmt->execute();
+          $affectation->bindParam(":montant", $montantActuel, PDO::PARAM_INT);
+
+          $affectation->execute();
+
+          /* --- */
+
+          $projet->execute();
         }
       }
 
-      $this-off();
+      $this->off();
+
+      $data = array(
+        "login" => $login,
+        "password" => $password
+      );
+
+      return $data;
     }
 
+    /**
+     * Renvoie tous les projets classés par ordre d'importance
+     *
+     * @return [Array] @arr - Tableau de projets
+     *///
     public function retrieveProjects() {
       $this->on();
 
@@ -144,6 +206,7 @@
             "montantActuel" => $row['montantActuel'],
             "importance" => $row['importance']
           );
+
           array_push($arr, $tempArr);
         }
 
@@ -152,15 +215,19 @@
       return $arr;
     }
 
-    // Fonction qui permet de générer un login unique
-    // basé sur le nom de l'entreprise
-    // @TODO: Vérifier que le login n'existe pas déjà
+    /**
+     * Genère un login unique basé sur le nom donné en paramètre
+     *
+     * @param [String] $nom - Nom de l'entreprise entré lors de l'inscription
+     * @return [String] $login - Login généré
+     *///
     private function generateLogin($nom) {
       $login = str_split($nom);
       $login[0] = strtoupper($login[0]);
       $tempLogin = "";
       $max = count($login) > 6 ? 6 : count($login);
 
+      // S'assure qu'il n'y ai pas plus de 6 charactères
       for($i = 0; $i < $max; ++$i) {
         $tempLogin .= $login[$i];
       }
@@ -168,10 +235,17 @@
       $login = $tempLogin;
       $login .= rand(1, 999);
 
+      // S'assure que le login est unique
+      $login = $this->userExist($login) ? $this->generateLogin($nom) : $login;
+
       return $login;
     }
 
-    // Fonction qui permet de générer un mot de passe unique
+    /**
+     * Générer un mot de passe unique
+     *
+     * @return [String] $password - Mot de passe généré
+     *///
     private function generatePassword() {
       // Tableau 1: Alphabet [a-z]
       // Tableau 2: Nombres [0-9]
@@ -217,6 +291,34 @@
 
       return $password;
     }
+
+    /**
+     * Vérifie que l'utilisateur entré n'exsite pas déjà
+     * ce qui permet d'avoir des logins uniques
+     *
+     * @param [String] $unLogin - Login à testé
+     * @return [Boolean] $exist - Boolean qui indique s'il existe ou non
+     *///
+    private function userExist($unLogin) {
+        // Boolean qui va être renvoyé
+        $exist = true;
+
+        $this->on();
+
+        // Récupération de tous les partenaires correspondants au login
+        $req = "SELECT * FROM partenaire WHERE login = :login";
+        $stmt = $this->connection->prepare($req);
+        $stmt->bindParam(":login", $unLogin, PDO::PARAM_STR);
+        $stmt->execute();
+
+        // S'il n'y a aucune ligne, le login n'existe pas
+        if ($stmt->rowCount() == 0)
+          $exist = false;
+
+        $this->off();
+
+        return $exist;
+      }
   }
 
 ?>

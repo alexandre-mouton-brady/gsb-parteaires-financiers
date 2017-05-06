@@ -11,9 +11,17 @@
     require('../views/templates/header.php');
 
     // Affichage du message d'erreur s'il existe
-    if (isset($_SESSION['message'])) {
-      echo '<div class="msg msg--error"> ' . $_SESSION['message'] . '</div>';
-      unset($_SESSION['message']);
+    if (isset($_SESSION['error'])) {
+      echo '<div class="msg msg--error"> ' . $_SESSION['error'] . '</div>';
+      unset($_SESSION['error']);
+    }
+    if (isset($_SESSION['success'])) {
+      echo '<div class="msg msg--success">';
+      echo '<h3> <em>Vos identifients</em> : </h3>';
+      echo '<p>' . $_SESSION['success']['login'] . '</p>';
+      echo '<p>' . $_SESSION['success']['password'] . '</p>';
+      echo '</div>';
+      unset($_SESSION['success']);
     }
 
     require('../views/pages/connexion.php');
@@ -25,7 +33,7 @@
   } else if ($req === 'GET' && isset($_SESSION['log']) && $_SESSION['log']) {
 
     // Enregistrement du message
-    $_SESSION['message'] = 'Vous êtes déjà connecté';
+    $_SESSION['warning'] = 'Vous êtes déjà connecté';
     // Redirection
     header('Location:' . $_SESSION['home']);
 
@@ -47,7 +55,7 @@
     // Autrement on enregistre un message comme quoi les logs ne
     // correpondent pas et on redirige vers la page par la méthode GET
     } else {
-      $_SESSION['message'] = "Le nom d'utilisateur ou/et le mot de passe ne correspondent pas";
+      $_SESSION['error'] = "Le nom d'utilisateur ou/et le mot de passe ne correspondent pas";
       header('Location: ' . $_SESSION['home'] . 'connexion');
     }
   }
