@@ -43,13 +43,15 @@
   // et on agit en conséquence.
   } else if ($req === 'POST') {
     require ('../classes/class.BDD.inc.php');
+    require ('../classes/class.Partenaire.inc.php');
+
     $bdd = new BDD();
     $isOk = $bdd->checkUser($_POST['username'], $_POST['pass']);
 
-    // Si les logs correspondent, on enregistre la session et on
-    // le redirige vers la page d'accueil.
-    if ($isOk) {
+    // Si les logs correspondent, on enregistre la session
+    if ($isOk["log"]) {
       $_SESSION['log'] = true;
+      $_SESSION['currentUser'] = $isOk['result'];
       header('Location:' . $_SESSION['home']);
 
     // Autrement on enregistre un message comme quoi les logs ne

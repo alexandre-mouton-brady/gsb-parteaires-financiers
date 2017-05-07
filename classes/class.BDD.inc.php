@@ -1,5 +1,22 @@
 <?php
 
+  /**
+   * Classe technique permettant de faire les appels à la base de données
+   *
+   * SOMMAIRE DES FONCTIONS:
+   *  -> __construct : constructeur
+   *  -> on : ouvre la connection à la BDD
+   *  -> off : ferme la connection à la BDD
+   *  -> checkUser : vérifie si le couple login/mdp correspond
+   *  -> getProjectsForUser : obtient les projets correspondant à l'ID
+   *  -> generateNewClient : génère un nouveau client lors de l'inscription
+   *  -> makeDonation : distribut l'argent de la donation
+   *  -> retrieveProjects : obtient tous les projets classés par importance
+   *  -> generateLogin : génère un login
+   *  -> generatePassword : génère un password
+   *  -> userExist : vérifie si le login existe déjà
+   *
+   */
   class BDD {
     private $connection;
     private $servername;
@@ -73,9 +90,51 @@
 
       $userLogged = $stmt->rowCount() > 0 ? True : False;
 
+      $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
       $this->off();
 
-      return $userLogged;
+      return array("log" => $userLogged, "result" => $result);
+    }
+
+    /**
+     * Renvoie tous les projets où l'argent du partenaire entré à
+     * été investie.
+     *
+     * @param [Int] $idPartenaire - Id du partenaire
+     * @return [Array] $projects - Liste des projets
+     *///
+    public function getProjectsForUser($idPartenaire) {
+      $this->on();
+
+      $req = 'SELECT
+                P.nomProjet,
+                P.couverture,
+                P.descriptionProjet,
+                P.montantAPayer as "MontantTotal",
+                A.montant as "MontantAttribué",
+                D.montant as "MontantVersé"
+              FROM
+                partenaire AS Pa
+              INNER JOIN
+                donation AS D ON D.idPartenaire = Pa.idPartenaire
+              INNER JOIN
+                affectation AS A ON A.idDonation = D.idDonation
+              INNER JOIN
+                projet AS P ON P.idProjet = A.idProjet
+              WHERE
+                Pa.idPartenaire = :idPartenaire';
+
+      $stmt = $this->connection->prepare($req);
+      $stmt->bindParam(":idPartenaire", $idPartenaire);
+
+      $stmt->execute();
+
+      $projects = $stmt->fetchAll();
+
+      $this->off();
+
+      return $projects;
     }
 
     /**
@@ -91,12 +150,10 @@
     public function generateNewClient($nom, $donation) {
       $password = $this->generatePassword();
       $login = $this->generateLogin($nom);
-      $montant = $donation;
-      $projects = $this->retrieveProjects();
 
       $this->on();
 
-      /*---------------------------*/
+      /* ---------- Insertion du nouveau paretenaire ---------- */
 
       $req = "INSERT INTO partenaire (nom, login, motDePasse) VALUES (:nom, :login, :motDePasse)";
 
@@ -108,56 +165,80 @@
 
       $stmt->execute();
 
-      /*---------------------------*/
+      /* ---------- Insertion de la donation ---------- */
 
-      $lastId = $this->connection->lastInsertId();
+      $idPartenaire = $this->connection->lastInsertId();
 
       $req = "INSERT INTO donation (montant, idPartenaire) VALUES (:donation, :idPartenaire)";
 
       $stmt = $this->connection->prepare($req);
       $stmt->bindParam(":donation", $donation, PDO::PARAM_STR);
-      $stmt->bindParam(":idPartenaire", $lastId, PDO::PARAM_INT);
+      $stmt->bindParam(":idPartenaire", $idPartenaire, PDO::PARAM_INT);
 
       $stmt->execute();
 
-      /*---------------------------*/
+      /* ---------- Distribution de la donation ---------- */
 
       $idDonation = $this->connection->lastInsertId();
+      $this->makeDonation($idDonation, $donation);
 
-      $reqAffectation = "INSERT INTO affectation (idDonation, idProjet, montant) VALUES (:idDonation, :idProjet, :montant)";
+      /* ---------- Renvoie des logs de l'utilisateur créé ---------- */
+
+      $this->off();
+
+      $data = array(
+        "login" => $login,
+        "password" => $password
+      );
+
+      return $data;
+    }
+
+    public function makeDonation($idDonation, $donation) {
+      $montant = $donation;
+      $projects = $this->retrieveProjects();
+
+      $this->on();
+
+      /* ---------- Préparation de la requêtes de distribution ---------- */
+
+      $reqAffectation = "INSERT INTO affectation (idDonation, idProjet, montant)
+                         VALUES (:idDonation, :idProjet, :montant)";
       $affectation = $this->connection->prepare($reqAffectation);
 
       $affectation->bindParam(":idDonation", $idDonation, PDO::PARAM_INT);
       $affectation->bindParam(":idProjet", $idProjet, PDO::PARAM_INT);
 
-      /* --- */
+      /* ---------- Préparation de la requêtes de mise à jour ---------- */
 
-      $reqProjet = "UPDATE projet SET montantActuel = :nouveauMontant WHERE idProjet = :idProjet";
+      $reqProjet = "UPDATE projet
+                    SET montantActuel = :nouveauMontant
+                    WHERE idProjet = :idProjet";
       $projet = $this->connection->prepare($reqProjet);
 
       $projet->bindParam(":nouveauMontant", $nouveauMontant, PDO::PARAM_INT);
       $projet->bindParam(":idProjet", $idProjet, PDO::PARAM_INT);
 
-      /* --- */
+      /* ---------- Distribution de la donation ---------- */
 
       foreach ($projects as $project) {
         $montantActuel = $project['montantActuel'];
         $idProjet = $project['id'];
 
+        /* --- Vérifie que le projet en cours n'est pas déjà financer --- */
+        /* --- Et qu'il reste de l'argent de la donation à distribuer --- */
         if ($montant <= 0)
           break;
         if ($montantActuel == 0)
           continue;
 
         if ($montantActuel - $montant >= 0) {
-
           $affectation->bindParam(":montant", $montant, PDO::PARAM_INT);
-
           $affectation->execute();
 
           /* --- */
 
-          $montant = $montant - $project['montantActuel'];
+          $montant -= $montantActuel;
           $nouveauMontant = $montant * -1;
 
           $projet->execute();
@@ -173,25 +254,19 @@
           /* --- */
 
           $projet->execute();
+
         }
-      }
+      } // End Foreach
 
       $this->off();
-
-      $data = array(
-        "login" => $login,
-        "password" => $password
-      );
-
-      return $data;
-    }
+    } // End function
 
     /**
      * Renvoie tous les projets classés par ordre d'importance
      *
      * @return [Array] @arr - Tableau de projets
      *///
-    public function retrieveProjects() {
+    private function retrieveProjects() {
       $this->on();
 
         $req = "SELECT * FROM projet ORDER BY importance DESC";

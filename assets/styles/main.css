@@ -37,6 +37,58 @@ input {
   outline-width: 0;
 }
 
+/* Main page */
+.header {
+  display: flex;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  justify-content: flex-end;
+  padding: 10px 100px;
+  background-color: var(--indiego);
+  color: var(--white);
+}
+
+.header > a {
+  color: var(--white);
+}
+
+.header > a:hover {
+  text-decoration: none;
+}
+
+.section {
+  margin-top: 100px;
+  min-height: 200vh;
+}
+
+.projects {
+  display: flex;
+  flex-flow: row wrap;
+}
+
+.projects__item {
+  width: 45%;
+  margin: 0 2.5%;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.26);
+  background-color: var(--white);
+}
+
+.projects__title {
+  padding: 0 15px;
+}
+
+.projects__thumb {
+  display: block;
+  width: 100%;
+}
+
+.projects__description {
+  padding: 0 10px 10px;
+}
+
 /* Login form */
 .form {
   background-color: var(--white);

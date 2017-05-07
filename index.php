@@ -13,15 +13,26 @@
     header('Location: ' . $_SESSION['home'] . 'connexion');
 
   } else {
+    require ('./classes/class.BDD.inc.php');
+    require ('./classes/class.Partenaire.inc.php');
     require ('./views/templates/header.php');
+
+    $db = new BDD();
+
+    $id = $_SESSION['currentUser']['idPartenaire'];
+    $nom = $_SESSION['currentUser']['nom'];
+    $login= $_SESSION['currentUser']['login'];
+    $password = $_SESSION['currentUser']['motDePasse'];
+    $projects = $db->getProjectsForUser($id);
+
+    $currentUser = new Partenaire($id, $nom, $login, $password, $projects);
+
+    require ('./views/pages/home.php');
 
     if (isset($_SESSION['warning'])) {
       echo '<div class="msg msg--warning"> ' . $_SESSION['warning'] . '</div>';
       unset($_SESSION['warning']);
     }
-
-    echo '<a href="' . $_SESSION['home'] . '?logout=true">Logout</a>';
-
     require ('./views/templates/footer.php');
   }
 ?>
