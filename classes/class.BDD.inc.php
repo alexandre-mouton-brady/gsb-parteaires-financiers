@@ -11,24 +11,29 @@
    *  -> getProjectsForUser : obtient les projets correspondant à l'ID
    *  -> generateNewClient : génère un nouveau client lors de l'inscription
    *  -> makeDonation : distribut l'argent de la donation
+   *  -> makeNewDonation : permet de créer une nouvelle donation
    *  -> retrieveProjects : obtient tous les projets classés par importance
    *  -> generateLogin : génère un login
    *  -> generatePassword : génère un password
    *  -> userExist : vérifie si le login existe déjà
    *
+   *  -> Client test : Apple195 = V3%5ene4u6
+   *
    */
-  class BDD {
+class BDD
+{
     private $connection;
     private $servername;
     private $username;
     private $password;
     private $dbname;
 
-    function __construct() {
-      $this->servername = 'localhost';
-      $this->username   = 'root';
-      $this->password   = '@lexandrE6';
-      $this->dbname     = 'partenaire';
+    function __construct()
+    {
+        $this->servername = 'localhost';
+        $this->username   = 'root';
+        $this->password   = '@lexandrE6';
+        $this->dbname     = 'partenaire';
     }
 
     /**
@@ -36,23 +41,22 @@
      *
      * @return void
      */
-    private function on() {
-      try {
-        $conn = new PDO(
-          "mysql:host=$this->servername;
+    private function on()
+    {
+        try {
+            $conn = new PDO(
+            "mysql:host=$this->servername;
            dbname=$this->dbname",
-           $this->username,
-           $this->password
-        );
+             $this->username,
+             $this->password
+            );
 
-        $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-        $this->connection = $conn;
-      }
-
-      catch (PDOException $e) {
-        throw Error('La connexion à échouée : ' . $e->getMessage());
-      }
+            $this->connection = $conn;
+        } catch (PDOException $e) {
+            throw Error('La connexion à échouée : ' . $e->getMessage());
+        }
     }
 
     /**
@@ -60,8 +64,9 @@
      *
      * @return void
      */
-    private function off() {
-      $this->connection = null;
+    private function off()
+    {
+        $this->connection = null;
     }
 
     /**
@@ -74,27 +79,28 @@
      * @return [Boolean] $userLogged - Vrai si les logs correspondent,
      *                                 faux sinon
      *///
-    public function checkUser($login, $password) {
-      $this->on();
+    public function checkUser($login, $password)
+    {
+        $this->on();
 
-      $stmt = $this->connection
-                   ->prepare("SELECT *
-                              FROM `partenaire`
-                              WHERE motDePasse = :password
-                              AND login = :login");
+        $stmt = $this->connection
+                     ->prepare("SELECT *
+                                FROM `partenaire`
+                                WHERE motDePasse = :password
+                                AND login = :login");
 
-      $stmt->bindParam(":login", $login, PDO::PARAM_STR);
-      $stmt->bindParam(":password", $password, PDO::PARAM_STR);
+        $stmt->bindParam(":login", $login, PDO::PARAM_STR);
+        $stmt->bindParam(":password", $password, PDO::PARAM_STR);
 
-      $stmt->execute();
+        $stmt->execute();
 
-      $userLogged = $stmt->rowCount() > 0 ? True : False;
+        $userLogged = $stmt->rowCount() > 0 ? true : false;
 
-      $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
-      $this->off();
+        $this->off();
 
-      return array("log" => $userLogged, "result" => $result);
+        return array("log" => $userLogged, "result" => $result);
     }
 
     /**
@@ -104,37 +110,57 @@
      * @param [Int] $idPartenaire - Id du partenaire
      * @return [Array] $projects - Liste des projets
      *///
-    public function getProjectsForUser($idPartenaire) {
-      $this->on();
+    public function getProjectsForUser($idPartenaire)
+    {
+        $this->on();
 
-      $req = 'SELECT
-                P.nomProjet,
-                P.couverture,
-                P.descriptionProjet,
-                P.montantAPayer as "MontantTotal",
-                A.montant as "MontantAttribué",
-                D.montant as "MontantVersé"
-              FROM
-                partenaire AS Pa
-              INNER JOIN
-                donation AS D ON D.idPartenaire = Pa.idPartenaire
-              INNER JOIN
-                affectation AS A ON A.idDonation = D.idDonation
-              INNER JOIN
-                projet AS P ON P.idProjet = A.idProjet
-              WHERE
-                Pa.idPartenaire = :idPartenaire';
+        // Recupération de toiutes les donations liées à l'id
+        $donationsReq = 'SELECT idDonation, montant
+                         FROM donation
+                         WHERE idPartenaire = :idPartenaire';
 
-      $stmt = $this->connection->prepare($req);
-      $stmt->bindParam(":idPartenaire", $idPartenaire);
+        $donations = $this->connection->prepare($donationsReq);
+        $donations->bindParam(":idPartenaire", $idPartenaire);
 
-      $stmt->execute();
+        $donations->execute();
 
-      $projects = $stmt->fetchAll();
+        $donationsResult = $donations->fetchAll();
 
-      $this->off();
+        // --- //
 
-      return $projects;
+        $allData = [];
+
+        $dataReq = 'SELECT
+                      P.nomProjet,
+                      P.couverture,
+                      P.montantAPayer,
+                      P.montantActuel,
+                      P.descriptionProjet,
+                      A.montant AS "MontantAttribue"
+                    FROM
+                      affectation AS A
+                    INNER JOIN
+                      projet as P ON A.idProjet = P.idProjet
+                    WHERE
+                      A.idDonation = :idDonation';
+
+        $data = $this->connection->prepare($dataReq);
+        $data->bindParam(":idDonation", $idDonation);
+
+        foreach ($donationsResult as $donation) {
+            $idDonation = $donation['idDonation'];
+            $data->execute();
+
+            $allData[] = [
+              'idDonation' => $idDonation,
+              'montantDonation' => $donation['montant'],
+              'projectData' => $data->fetchAll()
+            ];
+        }
+
+        $this->off();
+
+        return $allData;
     }
 
     /**
@@ -147,118 +173,163 @@
      * @return [Array] $data - Tableau contenant les identifiants générés
      */
     // @TODO: Vérifier que le client n'existe pas déjà
-    public function generateNewClient($nom, $donation) {
-      $password = $this->generatePassword();
-      $login = $this->generateLogin($nom);
+    public function generateNewClient($nom, $donation)
+    {
+        $password = $this->generatePassword();
+        $login = $this->generateLogin($nom);
 
-      $this->on();
+        $this->on();
 
       /* ---------- Insertion du nouveau paretenaire ---------- */
 
-      $req = "INSERT INTO partenaire (nom, login, motDePasse) VALUES (:nom, :login, :motDePasse)";
+        $req = "INSERT INTO partenaire (nom, login, motDePasse) VALUES (:nom, :login, :motDePasse)";
 
-      $stmt = $this->connection->prepare($req);
+        $stmt = $this->connection->prepare($req);
 
-      $stmt->bindParam(":nom", $nom, PDO::PARAM_STR);
-      $stmt->bindParam(":login", $login, PDO::PARAM_STR);
-      $stmt->bindParam(":motDePasse", $password, PDO::PARAM_STR);
+        $stmt->bindParam(":nom", $nom, PDO::PARAM_STR);
+        $stmt->bindParam(":login", $login, PDO::PARAM_STR);
+        $stmt->bindParam(":motDePasse", $password, PDO::PARAM_STR);
 
-      $stmt->execute();
+        $stmt->execute();
 
       /* ---------- Insertion de la donation ---------- */
 
-      $idPartenaire = $this->connection->lastInsertId();
+        $idPartenaire = $this->connection->lastInsertId();
 
-      $req = "INSERT INTO donation (montant, idPartenaire) VALUES (:donation, :idPartenaire)";
+        $req = "INSERT INTO donation (montant, idPartenaire) VALUES (:donation, :idPartenaire)";
 
-      $stmt = $this->connection->prepare($req);
-      $stmt->bindParam(":donation", $donation, PDO::PARAM_STR);
-      $stmt->bindParam(":idPartenaire", $idPartenaire, PDO::PARAM_INT);
+        $stmt = $this->connection->prepare($req);
+        $stmt->bindParam(":donation", $donation, PDO::PARAM_STR);
+        $stmt->bindParam(":idPartenaire", $idPartenaire, PDO::PARAM_INT);
 
-      $stmt->execute();
+        $stmt->execute();
 
       /* ---------- Distribution de la donation ---------- */
 
-      $idDonation = $this->connection->lastInsertId();
-      $this->makeDonation($idDonation, $donation);
+        $idDonation = $this->connection->lastInsertId();
+        $this->makeDonation($idDonation, $donation);
 
       /* ---------- Renvoie des logs de l'utilisateur créé ---------- */
 
-      $this->off();
+        $this->off();
 
-      $data = array(
+        $data = array(
         "login" => $login,
         "password" => $password
-      );
+        );
 
-      return $data;
+        return $data;
     }
 
-    public function makeDonation($idDonation, $donation) {
-      $montant = $donation;
-      $projects = $this->retrieveProjects();
+    /**
+     * Permet de créer une nouvelle donation et de la distribuer
+     *
+     * @param [type] $idPartenaire - Id du visiteur qui fait le don
+     * @param [type] $donation - Montant de la donation effectué
+     * @return [Boolean] - True si tout va bien, faux sinon
+     *///
+    public function makeNewDonation($idPartenaire, $donation)
+    {
 
-      $this->on();
+        $this->on();
+
+        try {
+            $req = 'INSERT INTO donation (montant, idPartenaire) VALUES (:montant, :id)';
+            $stmt = $this->connection->prepare($req);
+            $stmt->bindParam(":montant", $donation, PDO::PARAM_STR);
+            $stmt->bindParam(":id", $idPartenaire, PDO::PARAM_INT);
+
+            $stmt->execute();
+
+          /* --- */
+
+            $idDonation = $this->connection->lastInsertId();
+            $this->makeDonation($idDonation, $donation);
+
+          /* --- */
+            $this->off();
+
+            return true;
+        } catch (Exception $e) {
+            echo $e;
+            return false;
+        }
+    }
+
+    /**
+     * Permet de distribuer l'argent d'une donation entre les différents
+     * entre les différents projets selon leurs ordre d'importance
+     *
+     * @param [Int] $idDonation - Id de la donation à distribuer
+     * @param [String] $donation - Montant du don
+     * @return void
+     *///
+    public function makeDonation($idDonation, $donation)
+    {
+        $montant = $donation;
+        $projects = $this->retrieveProjects();
+
+        $this->on();
 
       /* ---------- Préparation de la requêtes de distribution ---------- */
 
-      $reqAffectation = "INSERT INTO affectation (idDonation, idProjet, montant)
+        $reqAffectation = "INSERT INTO affectation (idDonation, idProjet, montant)
                          VALUES (:idDonation, :idProjet, :montant)";
-      $affectation = $this->connection->prepare($reqAffectation);
+        $affectation = $this->connection->prepare($reqAffectation);
 
-      $affectation->bindParam(":idDonation", $idDonation, PDO::PARAM_INT);
-      $affectation->bindParam(":idProjet", $idProjet, PDO::PARAM_INT);
+        $affectation->bindParam(":idDonation", $idDonation, PDO::PARAM_INT);
+        $affectation->bindParam(":idProjet", $idProjet, PDO::PARAM_INT);
 
       /* ---------- Préparation de la requêtes de mise à jour ---------- */
 
-      $reqProjet = "UPDATE projet
+        $reqProjet = "UPDATE projet
                     SET montantActuel = :nouveauMontant
                     WHERE idProjet = :idProjet";
-      $projet = $this->connection->prepare($reqProjet);
+        $projet = $this->connection->prepare($reqProjet);
 
-      $projet->bindParam(":nouveauMontant", $nouveauMontant, PDO::PARAM_INT);
-      $projet->bindParam(":idProjet", $idProjet, PDO::PARAM_INT);
+        $projet->bindParam(":nouveauMontant", $nouveauMontant, PDO::PARAM_INT);
+        $projet->bindParam(":idProjet", $idProjet, PDO::PARAM_INT);
 
       /* ---------- Distribution de la donation ---------- */
 
-      foreach ($projects as $project) {
-        $montantActuel = $project['montantActuel'];
-        $idProjet = $project['id'];
+        foreach ($projects as $project) {
+            $montantActuel = $project['montantActuel'];
+            $idProjet = $project['id'];
 
-        /* --- Vérifie que le projet en cours n'est pas déjà financer --- */
-        /* --- Et qu'il reste de l'argent de la donation à distribuer --- */
-        if ($montant <= 0)
-          break;
-        if ($montantActuel == 0)
-          continue;
+            /* --- Vérifie que le projet en cours n'est pas déjà financer --- */
+            /* --- Et qu'il reste de l'argent de la donation à distribuer --- */
+            if ($montant <= 0) {
+                break;
+            }
+            if ($montantActuel == 0) {
+                continue;
+            }
 
-        if ($montantActuel - $montant >= 0) {
-          $affectation->bindParam(":montant", $montant, PDO::PARAM_INT);
-          $affectation->execute();
+            if ($montantActuel - $montant >= 0) {
+                $affectation->bindParam(":montant", $montant, PDO::PARAM_INT);
+                $affectation->execute();
 
-          /* --- */
+                /* --- */
 
-          $montant -= $montantActuel;
-          $nouveauMontant = $montant * -1;
+                $montant -= $montantActuel;
+                $nouveauMontant = $montant * -1;
 
-          $projet->execute();
+                $projet->execute();
+            } elseif ($montantActuel - $montant < 0) {
+                $montant -= $montantActuel;
+                $nouveauMontant = 0;
 
-        } else if ($montantActuel - $montant < 0) {
-          $montant -= $montantActuel;
-          $nouveauMontant = 0;
+                $affectation->bindParam(":montant", $montantActuel, PDO::PARAM_INT);
 
-          $affectation->bindParam(":montant", $montantActuel, PDO::PARAM_INT);
+                $affectation->execute();
 
-          $affectation->execute();
+                /* --- */
 
-          /* --- */
+                $projet->execute();
+            }
+        } // End Foreach
 
-          $projet->execute();
-
-        }
-      } // End Foreach
-
-      $this->off();
+        $this->off();
     } // End function
 
     /**
@@ -266,28 +337,29 @@
      *
      * @return [Array] @arr - Tableau de projets
      *///
-    private function retrieveProjects() {
-      $this->on();
+    private function retrieveProjects()
+    {
+        $this->on();
 
         $req = "SELECT * FROM projet ORDER BY importance DESC";
         $arr = array();
 
         foreach ($this->connection->query($req) as $row) {
-          $tempArr = array(
+            $tempArr = array(
             "id" => $row['idProjet'],
             "nom" => $row['nomProjet'],
             "description" => $row['descriptionProjet'],
             "montantAPayer" => $row['montantAPayer'],
             "montantActuel" => $row['montantActuel'],
             "importance" => $row['importance']
-          );
+            );
 
-          array_push($arr, $tempArr);
+            array_push($arr, $tempArr);
         }
 
-      $this->off();
+        $this->off();
 
-      return $arr;
+        return $arr;
     }
 
     /**
@@ -296,24 +368,25 @@
      * @param [String] $nom - Nom de l'entreprise entré lors de l'inscription
      * @return [String] $login - Login généré
      *///
-    private function generateLogin($nom) {
-      $login = str_split($nom);
-      $login[0] = strtoupper($login[0]);
-      $tempLogin = "";
-      $max = count($login) > 6 ? 6 : count($login);
+    private function generateLogin($nom)
+    {
+        $login = str_split($nom);
+        $login[0] = strtoupper($login[0]);
+        $tempLogin = "";
+        $max = count($login) > 6 ? 6 : count($login);
 
       // S'assure qu'il n'y ai pas plus de 6 charactères
-      for($i = 0; $i < $max; ++$i) {
-        $tempLogin .= $login[$i];
-      }
+        for ($i = 0; $i < $max; ++$i) {
+            $tempLogin .= $login[$i];
+        }
 
-      $login = $tempLogin;
-      $login .= rand(1, 999);
+        $login = $tempLogin;
+        $login .= rand(1, 999);
 
       // S'assure que le login est unique
-      $login = $this->userExist($login) ? $this->generateLogin($nom) : $login;
+        $login = $this->userExist($login) ? $this->generateLogin($nom) : $login;
 
-      return $login;
+        return $login;
     }
 
     /**
@@ -321,50 +394,52 @@
      *
      * @return [String] $password - Mot de passe généré
      *///
-    private function generatePassword() {
+    private function generatePassword()
+    {
       // Tableau 1: Alphabet [a-z]
       // Tableau 2: Nombres [0-9]
       // Tableau 3: Charactères spéciaux
-      $char = [
+        $char = [
         ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'],
 
         ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
 
         ['#', '@', '&', '$', '£', '%', '!']
-      ];
+        ];
 
       // Stock le nombre d'éléments dans chaque tableau
-      $alphaCount = count($char[0]);
-      $numCount = count($char[1]);
-      $speCount = count($char[2]);
+        $alphaCount = count($char[0]);
+        $numCount = count($char[1]);
+        $speCount = count($char[2]);
 
-      $password = "";
+        $password = "";
 
       // S'assure qu'il y ai au moins :
       // * une majuscule
       // * un nombre
       // * une charactère spécial
-      $password .= strtoupper($char[0][rand(0, $alphaCount - 1)]);
-      $password .= $char[1][rand(0, $numCount - 1)];
-      $password .= $char[2][rand(0, $speCount - 1)];
+        $password .= strtoupper($char[0][rand(0, $alphaCount - 1)]);
+        $password .= $char[1][rand(0, $numCount - 1)];
+        $password .= $char[2][rand(0, $speCount - 1)];
 
       // Boucle pour former le mot de passe
-      for ($i = 0; $i < 7; ++$i) {
-        $randList = rand(0, 10);
+        for ($i = 0; $i < 7; ++$i) {
+            $randList = rand(0, 10);
 
-        if ($randList <= 5)
-          $randList = 0;
-        else if ($randList > 5 && $randList <= 8)
-          $randList = 1;
-        else
-          $randList = 2;
+            if ($randList <= 5) {
+                $randList = 0;
+            } elseif ($randList > 5 && $randList <= 8) {
+                $randList = 1;
+            } else {
+                $randList = 2;
+            }
 
-        $randNumb = rand(0, count($char[$randList]) - 1);
+            $randNumb = rand(0, count($char[$randList]) - 1);
 
-        $password .= $char[$randList][$randNumb];
-      }
+            $password .= $char[$randList][$randNumb];
+        }
 
-      return $password;
+        return $password;
     }
 
     /**
@@ -374,7 +449,8 @@
      * @param [String] $unLogin - Login à testé
      * @return [Boolean] $exist - Boolean qui indique s'il existe ou non
      *///
-    private function userExist($unLogin) {
+    private function userExist($unLogin)
+    {
         // Boolean qui va être renvoyé
         $exist = true;
 
@@ -387,13 +463,12 @@
         $stmt->execute();
 
         // S'il n'y a aucune ligne, le login n'existe pas
-        if ($stmt->rowCount() == 0)
-          $exist = false;
+        if ($stmt->rowCount() == 0) {
+            $exist = false;
+        }
 
         $this->off();
 
         return $exist;
-      }
-  }
-
-?>
+    }
+}

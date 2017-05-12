@@ -3,30 +3,71 @@
 </header>
 
 <section class="section">
-  <h2 class="section__title">Projets</h2>
-  <div class="projects">
-    <?php foreach ($currentUser->getProjets() as $projet) : ?>
-      <article class="projects__item">
-        <img
-          src="<?php echo $_SESSION['home'] . 'assets/imgs/' . $projet['couverture']; ?>"
-          alt="<?php echo $projet['nomProjet']; ?>"
-          class="projects__thumb">
+    <?php foreach ($currentUser->getListeDonations() as $i => $donation) : ?>
 
-        <h3 class="projects__title">
-          <?php echo $projet['nomProjet'] ?>
-        </h3>
+    <h2 class="section__title">Donation n° <?php echo $i + 1 . ': ' . $donation['montantDonation']; ?>€</h2>
 
-        <p class="projects__description">
-          <?php echo $projet['descriptionProjet']; ?>
-        </p>
+    <div class="projects">
+        <?php foreach ($donation['projectData'] as $projet) : ?>
 
-        <footer>
-          <span>Fonds investis :
-            <?php echo $projet['MontantAttribué']; ?>/
-            <?php echo $projet['MontantTotal']; ?>
-          </span>
-        </footer>
-      </article>
+          <article class="projects__item">
+            <img
+              src="<?php echo $_SESSION['home'] . 'assets/imgs/' . $projet['couverture']; ?>"
+              alt="<?php echo $projet['nomProjet']; ?>"
+              class="projects__thumb"
+            />
+
+            <header class="projects__title">
+              <h1><?php echo $projet['nomProjet']; ?></h1>
+              <h2>Fonds investis : <?php echo $projet['MontantAttribue'] . '/' . $projet['montantAPayer']; ?></h2>
+              <div
+                class="progress"
+                data-full="<?php echo $projet['montantAPayer']; ?>"
+              >
+                <div
+                  class="progress__completed"
+                  data-completed="<?php echo $projet['montantActuel']; ?>"
+                ></div>
+                <div
+                  class="progress__participated"
+                  data-participated="<?php echo $projet['MontantAttribue']; ?>"
+                ></div>
+              </div>
+            </header>
+
+            <section class="projects__description">
+              <p><?php echo $projet['descriptionProjet']; ?></p>
+            </section>
+
+            <footer class="projects__footer">
+              <a href="#0" class="projects__cta">Voir projet</a>
+            </footer>
+          </article>
+
+        <?php endforeach; ?>
+    </div>
+
     <?php endforeach; ?>
-  </div>
 </section>
+
+<script>
+(function () {
+  const progressCompleted = document.querySelectorAll('.progress__completed');
+
+  progressCompleted.forEach((el) => {
+    const parent = el.parentNode,
+          sibling = el.nextElementSibling,
+
+          dataParent = parent.dataset.full,
+          data = dataParent -  el.dataset.completed,
+          dataSibling = sibling.dataset.participated,
+
+          percentageCompleted = ((data - dataSibling) / dataParent),
+          percentageParticipated = (dataSibling / dataParent);
+
+    el.style.transform = `scaleX(${percentageCompleted})`;
+    sibling.style.transform = `scaleX(${percentageParticipated})`;
+    sibling.style.left = `${percentageCompleted * 100}%`;
+  });
+})();
+</script>

@@ -1,27 +1,29 @@
 <?php
 
-  class Partenaire {
+class Partenaire
+{
     private $id;
     private $nom;
     private $login;
     private $password;
-    private $listProjets;
+    private $listeDonations;
 
-    function __construct($pId, $pNom, $pLogin, $pPassword, $pListProjets) {
-      $this->id = $pId;
-      $this->nom = $pNom;
-      $this->login = $pLogin;
-      $this->password = $pPassword;
-      $this->listProjets = $pListProjets;
+    function __construct($pId, $pNom, $pLogin, $pPassword, $pListeDonations)
+    {
+        $this->id = $pId;
+        $this->nom = $pNom;
+        $this->login = $pLogin;
+        $this->password = $pPassword;
+        $this->listeDonations = $pListeDonations;
     }
 
-    public function getNom() {
-      return $this->nom;
+    public function getNom()
+    {
+        return $this->nom;
     }
 
-    public function getProjets() {
-      return $this->listProjets;
+    public function getListeDonations()
+    {
+        return $this->listeDonations;
     }
-  }
-
-?>
+}
