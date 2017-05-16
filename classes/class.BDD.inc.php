@@ -332,6 +332,26 @@ class BDD
         $this->off();
     } // End function
 
+    public function getBestClients()
+    {
+        $this->on();
+
+        $req = 'SELECT nom, SUM(montant) AS montant
+                FROM partenaire AS P
+                INNER JOIN donation AS D ON P.idPartenaire = D.idPartenaire
+                GROUP BY nom
+                ORDER BY montant DESC';
+
+        $stmt = $this->connection->prepare($req);
+        $stmt->execute();
+
+        $res = $stmt->fetchAll();
+
+        $this->off();
+
+        return $res;
+    }
+
     /**
      * Renvoie tous les projets classés par ordre d'importance
      *
