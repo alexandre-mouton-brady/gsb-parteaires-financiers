@@ -29,8 +29,6 @@ if ($req == 'GET') {
 
         $bestClients = $db->getBestClients();
 
-        require ('../views/pages/best-clients.php');
-
         if (isset($_SESSION['warning']) || isset($_SESSION['error'])) {
             echo '<div class="msg msg--warning"> ' . $_SESSION['warning'] . '</div>';
             unset($_SESSION['warning']);
@@ -44,6 +42,7 @@ if ($req == 'GET') {
             unset($_SESSION['success']);
         }
 
+        require ('../views/pages/best-clients.php');
         require ('../views/components/overlay.php');
         require ('../views/components/donation-form.php');
         require ('../views/templates/footer.php');

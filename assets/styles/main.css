@@ -61,7 +61,7 @@ input {
   top: 0;
   left: 0;
   right: 0;
-  justify-content: flex-end;
+  justify-content: space-between;
   padding: 10px 100px;
   background-color: var(--indiego);
   color: var(--white);
@@ -78,7 +78,6 @@ input {
 
 .section {
   margin-top: 100px;
-  min-height: 200vh;
   width: 100%;
   padding: 0 75px;
   max-width: 1440px;
@@ -448,7 +447,7 @@ input {
   transition: transform 300ms ease-in-out;
 }
 .new-donation--rotate {
-  transform: rotate(45deg);
+  transform: rotate(220deg);
 }
 
 .formDonation {
@@ -465,6 +464,57 @@ input {
 
 .blur {
   filter: blur(5px);
+}
+
+/*  tableaux */
+.card {
+  box-shadow: var(--shadow-2);
+  border-radius: 3px;
+  padding-top: 30px;
+  width: 100%;
+  position: relative;
+  max-width: 650px;
+  white-space: nowrap;
+  overflow-y: auto;
+}
+
+.table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.table__title {
+  margin: 0 0 20px 50px;
+  font-size: 1.4rem;
+}
+
+.table__header {
+  color: rgba(0, 0, 0, 0.54);
+}
+.table__body,
+.table__title {
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.table__row {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.table__body > .table__row:last-of-type {
+  border-bottom-width: 0;
+}
+.string-col,
+.numeric-col {
+  padding: 15px 50px;
+}
+
+.string-col {
+  text-align: left;
+}
+
+.numeric-col {
+  text-align: right;
 }
 
 /*Animations*/

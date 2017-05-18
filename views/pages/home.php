@@ -1,5 +1,6 @@
 <header class="header">
   <a href="<?php echo $_SESSION['home'] . 'top-utilisateur' ?>">Top utilisateurs</a>
+  <span><?php echo $currentUser->getNom(); ?></span>
   <a href="<?php echo $_SESSION['home'] ?>?logout=true">Déconnexion</a>
 </header>
 

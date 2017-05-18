@@ -340,6 +340,7 @@ class BDD
                 FROM partenaire AS P
                 INNER JOIN donation AS D ON P.idPartenaire = D.idPartenaire
                 GROUP BY nom
+                HAVING SUM(montant) >= 10000
                 ORDER BY montant DESC';
 
         $stmt = $this->connection->prepare($req);
