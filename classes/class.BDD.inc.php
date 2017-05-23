@@ -32,7 +32,7 @@ class BDD
     {
         $this->servername = 'localhost';
         $this->username   = 'root';
-        $this->password   = '@lexandrE6';
+        $this->password   = '';
         $this->dbname     = 'partenaire';
     }
 
