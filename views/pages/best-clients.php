@@ -28,6 +28,20 @@
       </tbody>
     </table>
 
+    <p>Donation moyenne: <?php echo number_format($avgDonation, 2); ?>€</p>
+    <br>
+
+    <p>Projets déjà financés :</p>
+    <?php foreach ($finishedProjects as $i => $project) : ?>
+
+      <p><?php echo $i + 1 . " - " . $project['nomProjet']; ?></p>
+
+    <?php endforeach; ?>
+
+    <br>
+
+    <p>Total des dons: <?php echo number_format($totalDonation, 2); ?>€</p>
+
   </div>
 
 

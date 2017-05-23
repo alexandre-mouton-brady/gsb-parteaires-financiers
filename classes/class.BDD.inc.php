@@ -69,6 +69,98 @@ class BDD
         $this->connection = null;
     }
 
+    public function getAvgDonation() {
+        $this->on();
+
+        $req = 'SELECT AVG(montant) AS moyenne FROM donation LIMIT 1';
+
+        $stmt = $this->connection->prepare($req);
+        $stmt->execute();
+
+        $res = $stmt->fetch();
+        $res = $res['moyenne'];
+
+        $this->off();
+
+        return $res;
+    }
+
+    public function getProjetsFinis() {
+        $this->on();
+
+        $req = 'SELECT nomProjet FROM projet WHERE montantActuel = 0';
+
+        $stmt = $this->connection->prepare($req);
+        $stmt->execute();
+
+        $res = $stmt->fetchAll();
+
+        $this->off();
+
+        return $res;
+    }
+
+    public function getTotalDonation() {
+        $this->on();
+
+        $req = 'SELECT SUM(montant) as total FROM donation LIMIT 1';
+
+        $stmt = $this->connection->prepare($req);
+        $stmt->execute();
+
+        $res = $stmt->fetch();
+        $res = $res['total'];
+
+        $this->off();
+
+        return $res;
+    }
+
+    public function makeNotification($libelle, $ip, $login) {
+        $id = $this->getUserByLogin($login);
+
+        if ($id != false) {
+            $this->on();
+
+            $req = 'INSERT INTO notification (libelle, ip, idPartenaire) VALUES (:libelle, :ip, :id)';
+
+            $stmt = $this->connection->prepare($req);
+
+            $stmt->bindParam(":libelle", $libelle, PDO::PARAM_STR);
+            $stmt->bindParam(":ip", $ip, PDO::PARAM_STR);
+            $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+
+            $stmt->execute();
+
+            $this->off();
+        }
+    }
+
+    private function getUserByLogin($login) {
+        $this->on();
+
+        $req = 'SELECT idPartenaire FROM partenaire WHERE login = :login LIMIT 1';
+
+        $stmt = $this->connection->prepare($req);
+
+        $stmt->bindParam(":login", $login, PDO::PARAM_STR);
+
+        $stmt->execute();
+
+        $res = $stmt->fetch();
+        $count = $stmt->rowCount();
+
+        if ($count > 0)
+            $res = $res['idPartenaire'];
+        else
+            $res = false;
+
+        $this->off();
+
+        return $res;
+    }
+
+
     /**
      * Vérifie si l'utilisateur qui essai de se connecter exsite et
      * si les identifiants entrés correspondent à ceux de la base de
@@ -340,8 +432,8 @@ class BDD
                 FROM partenaire AS P
                 INNER JOIN donation AS D ON P.idPartenaire = D.idPartenaire
                 GROUP BY nom
-                HAVING SUM(montant) >= 10000
-                ORDER BY montant DESC';
+                ORDER BY montant DESC
+                LIMIT 3';
 
         $stmt = $this->connection->prepare($req);
         $stmt->execute();

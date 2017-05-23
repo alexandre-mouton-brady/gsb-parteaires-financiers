@@ -4,7 +4,7 @@
   // On recupère la méthode avec laquelle est appellée la page "Connexion"
   $req = $_SERVER['REQUEST_METHOD'];
 
-  if ($req === 'GET' && (!$_SESSION['log'] || !isset($_SESSION['log']))) {
+  if ($req === 'GET' && (!isset($_SESSION['log']) || !$_SESSION['log'])) {
     require('../views/templates/header.php');
     require('../views/pages/inscription.php');
     require('../views/templates/footer.php');

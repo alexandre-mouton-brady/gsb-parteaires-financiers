@@ -1,3 +1,4 @@
+/* Reset et instanciation de variables */
 * { box-sizing: border-box }
 
 :root {
@@ -54,7 +55,7 @@ input {
   outline-width: 0;
 }
 
-/* Main page */
+/* Header */
 .header {
   display: flex;
   position: fixed;
@@ -76,6 +77,7 @@ input {
   text-decoration: none;
 }
 
+/* Conteneur principal */
 .section {
   margin-top: 100px;
   width: 100%;
@@ -83,12 +85,14 @@ input {
   max-width: 1440px;
 }
 
+/* Conteneur des projets */
 .projects {
   display: flex;
   flex-flow: row wrap;
   justify-content: center;
 }
 
+/* Un projet */
 .projects__item {
   width: 45%;
   min-width: 350px;
@@ -136,6 +140,7 @@ input {
   display: flex;
 }
 
+/* cta = call to action : bouton permettant de visualiser un projet */
 .projects__cta {
   padding: 0 8px;
   margin-right: 8px;
@@ -163,7 +168,7 @@ input {
 .projects__cta:hover { text-decoration: none; }
 .projects__cta:hover:after { opacity: 1; }
 
-/* Login form */
+/* Formulaire de connexion / inscription */
 .form {
   background-color: var(--white);
   border-radius: 2px;
@@ -288,7 +293,7 @@ input {
   transform: translate3d(-50%, -50%, 0);
 }
 
-/* Errors handeling */
+/* Affichage des différentes notifications */
 .msg {
   position: fixed;
   top: 10px;
@@ -317,6 +322,7 @@ input {
   animation: drop 1s ease-in-out forwards;
 }
 
+/* Fond lors d'une nouvelle donation */
 .overlay {
   top: 0;
   left: 0;
@@ -334,6 +340,7 @@ input {
   cursor: pointer;
 }
 
+/* Barre de progression des projets */
 .progress__container {
   display: flex;
   align-items: center;

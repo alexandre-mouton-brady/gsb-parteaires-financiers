@@ -25,6 +25,8 @@
   </footer>
 </div>
 
+<?php var_dump($_SESSION['count']) ?>
+
 <script>
   var links = document.querySelectorAll('a');
   var form = document.querySelector('.form');

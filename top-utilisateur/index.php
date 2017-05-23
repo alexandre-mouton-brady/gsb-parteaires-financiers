@@ -28,6 +28,9 @@ if ($req == 'GET') {
         $currentUser = new Partenaire($id, $nom, $login, $password, $donations);
 
         $bestClients = $db->getBestClients();
+        $avgDonation = $db->getAvgDonation();
+        $finishedProjects = $db->getProjetsFinis();
+        $totalDonation = $db->getTotalDonation();
 
         if (isset($_SESSION['warning']) || isset($_SESSION['error'])) {
             echo '<div class="msg msg--warning"> ' . $_SESSION['warning'] . '</div>';

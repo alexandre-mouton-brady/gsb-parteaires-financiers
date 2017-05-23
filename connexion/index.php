@@ -4,10 +4,16 @@
   // On recupère la méthode avec laquelle est appellée la page "Connexion"
   $req = $_SERVER['REQUEST_METHOD'];
 
+  if (!isset($_SESSION['count']))
+    $_SESSION['count'] = 0;
+
+  // if ($_SESSION['count'] >= 3)
+  //   header('Location: ' . $_SESSION['home'] . 'erreur');
+
   // Si on demande à afficher la page et que l'utilisateur
   // n'est pas déjà connecté, on affiche la page de connexion
   // avec un message d'erreur s'il a déjà essayé de se connecter
-  if ($req === 'GET' && (!$_SESSION['log'] || !isset($_SESSION['log']))) {
+  if ($req === 'GET' && (!isset($_SESSION['log']) || !$_SESSION['log'])) {
     require('../views/templates/header.php');
 
     // Affichage du message d'erreur s'il existe
@@ -52,13 +58,21 @@
     if ($isOk["log"]) {
       $_SESSION['log'] = true;
       $_SESSION['currentUser'] = $isOk['result'];
+      unset($_SESSION['count']);
       header('Location:' . $_SESSION['home']);
 
     // Autrement on enregistre un message comme quoi les logs ne
     // correpondent pas et on redirige vers la page par la méthode GET
     } else {
       $_SESSION['error'] = "Le nom d'utilisateur ou/et le mot de passe ne correspondent pas";
-      header('Location: ' . $_SESSION['home'] . 'connexion');
+      $_SESSION['count'] += 1;
+
+      if ($_SESSION['count'] >= 3) {
+        $bdd->makeNotification('Tentatives excédées', $_SERVER['REMOTE_ADDR'], $_POST['username']);
+        header('Location: ' . $_SESSION['home'] . 'erreur');
+      } else {
+        header('Location: ' . $_SESSION['home'] . 'connexion');
+      }
     }
   }
 ?>
